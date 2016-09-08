@@ -13,6 +13,14 @@ This image is registered to the [Docker Hub](https://hub.docker.com/r/nutsllc/to
 * [Learn more](http://redis.io/topics/introduction)
 * [Official Demo](https://demo.owncloud.org/index.php/apps/files/)
 
+## Run container
+
+```bash
+docker run -p 8888:80 -td nutsllc/toybox-owncloud:9.1.0-apache
+```
+
+Then open your web browser and access ``http://<HOST(IP Address)>:8888``
+
 ## Docker Compose example( with SQLite )
 
 This is the simplest way to run the ownCloud using SQLite as a database of it.
