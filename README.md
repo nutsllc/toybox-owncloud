@@ -27,7 +27,7 @@ This is the simplest way to run the ownCloud using SQLite as a database of it.
 
 ```bash
 owncloud:
-    image: nutsllc/toybox-owncloud:9.1.0-apache
+    image: nutsllc/toybox-owncloud
     volumes:
         - "./.data/owncloud/config:/var/www/html/config"
         - "./.data/owncloud/data:/var/www/html/data"
@@ -41,7 +41,7 @@ Using MySQL as database for the owncloud, set ``DATABASE`` environment to ``mysq
 
 ```bash
 owncloud:
-    image: nutsllc/toybox-owncloud:9.1.0-apache
+    image: nutsllc/toybox-owncloud
     links:
         - mariadb:mysql
     environment:
