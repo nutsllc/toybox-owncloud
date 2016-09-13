@@ -4,6 +4,8 @@ A Dockerfile for deploying a [ownCloud](https://owncloud.org/) which is open sou
 
 This image is registered to the [Docker Hub](https://hub.docker.com/r/nutsllc/toybox-redis/) which is the official docker image registory.
 
+In addition, this image is compatible with [ToyBox](https://github.com/nutsllc/toybox) complytely to manage the applications on Docker.
+
 ## What is the ownCloud ?
 
 >### Access & share your files, calendars, contacts, mail & more from any device, on your terms
