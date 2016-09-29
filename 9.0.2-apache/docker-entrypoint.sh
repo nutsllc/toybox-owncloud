@@ -18,11 +18,15 @@ sh /entrypoint.sh
 docroot="/var/www/html"
 chown -R ${user}:${group} ${docroot}
 
-db_state=$(mysqladmin ping -h ${MYSQL_PORT_3306_TCP_ADDR} -u ${MYSQL_ENV_MYSQL_USER}  -p${MYSQL_ENV_MYSQL_PASSWORD}) > /dev/null 2>&1
-while [ "${db_state}" != "mysqld is alive" ]; do
-    echo "try to connect db.." && sleep 3
-    db_state=$(mysqladmin ping -h ${MYSQL_PORT_3306_TCP_ADDR} -u ${MYSQL_ENV_MYSQL_USER}  -p${MYSQL_ENV_MYSQL_PASSWORD}) > /dev/null 2>&1
-done
+if [ ${DATABASE:=sqlite} = "mysql" ]; then
+    db_state=$(mysqladmin ping -h ${MYSQL_PORT_3306_TCP_ADDR} -u ${MYSQL_ENV_MYSQL_USER} -p${MYSQL_ENV_MYSQL_PASSWORD} 2>/dev/null )
+    printf "wait.."
+    while [ "${db_state}" != "mysqld is alive" ]; do
+        printf "." && sleep 3
+        db_state=$(mysqladmin ping -h ${MYSQL_PORT_3306_TCP_ADDR} -u ${MYSQL_ENV_MYSQL_USER} -p${MYSQL_ENV_MYSQL_PASSWORD} 2>/dev/null )
+    done
+    echo ""
+fi
 
 if [ -f "${docroot}/config/config.php" ]; then
     sed -i -e "s/'dbhost' => '.*\..*\..*\..*'/'dbhost' => '${MYSQL_PORT_3306_TCP_ADDR}'/g" ${docroot}/config/config.php
