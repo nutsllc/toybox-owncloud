@@ -15,16 +15,17 @@ fi
 
 sh /entrypoint.sh
 
-
 docroot="/var/www/html"
 chown -R ${user}:${group} ${docroot}
 
 if [ ${DATABASE:=sqlite} = "mysql" ]; then
-    db_state=$(mysqladmin ping -h ${MYSQL_PORT_3306_TCP_ADDR} -u ${MYSQL_ENV_MYSQL_USER}  -p${MYSQL_ENV_MYSQL_PASSWORD}) > /dev/null 2>&1
+    db_state=$(mysqladmin ping -h ${MYSQL_PORT_3306_TCP_ADDR} -u ${MYSQL_ENV_MYSQL_USER} -p${MYSQL_ENV_MYSQL_PASSWORD} 2>/dev/null )
+    printf "wait.."
     while [ "${db_state}" != "mysqld is alive" ]; do
-        echo "try to connect db.." && sleep 3
-        db_state=$(mysqladmin ping -h ${MYSQL_PORT_3306_TCP_ADDR} -u ${MYSQL_ENV_MYSQL_USER}  -p${MYSQL_ENV_MYSQL_PASSWORD}) > /dev/null 2>&1
+        printf "." && sleep 3
+        db_state=$(mysqladmin ping -h ${MYSQL_PORT_3306_TCP_ADDR} -u ${MYSQL_ENV_MYSQL_USER} -p${MYSQL_ENV_MYSQL_PASSWORD} 2>/dev/null )
     done
+    echo ""
 fi
 
 if [ -f "${docroot}/config/config.php" ]; then
