@@ -45,7 +45,7 @@ Using MySQL as database for the owncloud, set ``DATABASE`` environment to ``mysq
 owncloud:
     image: nutsllc/toybox-owncloud
     links:
-        - mariadb:mysql
+        - mysql:mysql
     environment:
         - DATABASE=mysql
         - OWNCLOUD_USER=toybox
@@ -58,7 +58,7 @@ owncloud:
     ports:
         - "8080:80"
 
-mariadb:
+mysql:
     image: nutsllc/toybox-mariadb:10.1.14
     volumes:
         - ./.data/mariadb:/var/lib/mysql
