@@ -18,45 +18,64 @@ sh /entrypoint.sh
 docroot="/var/www/html"
 chown -R ${user}:${group} ${docroot}
 
-if [ ${DATABASE:=sqlite} = "mysql" ]; then
-    db_state=$(mysqladmin ping -h ${MYSQL_PORT_3306_TCP_ADDR} -u ${MYSQL_ENV_MYSQL_USER} -p${MYSQL_ENV_MYSQL_PASSWORD} 2>/dev/null )
+: ${DATABASE:=manual}
+: ${OWNCLOUD_ADMIN_USER:=toybox}
+: ${OWNCLOUD_ADMIN_PASSWORD:=toybox}
+
+if [ ${DATABASE} = "mysql" ]; then
+    db_state=$(mysqladmin ping -h ${MYSQL_PORT_3306_TCP_ADDR} -u root -p${MYSQL_ENV_MYSQL_ROOT_PASSWORD} 2>/dev/null )
     printf "wait.."
     while [ "${db_state}" != "mysqld is alive" ]; do
         printf "." && sleep 3
-        db_state=$(mysqladmin ping -h ${MYSQL_PORT_3306_TCP_ADDR} -u ${MYSQL_ENV_MYSQL_USER} -p${MYSQL_ENV_MYSQL_PASSWORD} 2>/dev/null )
+        db_state=$(mysqladmin ping -h ${MYSQL_PORT_3306_TCP_ADDR} -u root -p${MYSQL_ENV_MYSQL_ROOT_PASSWORD} 2>/dev/null )
     done
     echo ""
 fi
 
 if [ -f "${docroot}/config/config.php" ]; then
-    sed -i -e "s/'dbhost' => '.*\..*\..*\..*'/'dbhost' => '${MYSQL_PORT_3306_TCP_ADDR}'/g" ${docroot}/config/config.php
+    if [ ${DATABASE} = "mysql" ]; then
+        sed -i -e "s/'dbhost' => '.*\..*\..*\..*'/'dbhost' => '${MYSQL_PORT_3306_TCP_ADDR}'/g" ${docroot}/config/config.php
+    fi
 else
-    sudo -u www-data php /usr/src/owncloud/occ maintenance:install \
-        --database ${DATABASE} \
-        --database-host ${MYSQL_PORT_3306_TCP_ADDR} \
-        --database-name ${MYSQL_ENV_MYSQL_DATABASE} \
-        --database-user ${MYSQL_ENV_MYSQL_USER} \
-        --database-pass ${MYSQL_ENV_MYSQL_PASSWORD} \
-        --admin-user ${OWNCLOUD_USER} \
-        --admin-pass ${OWNCLOUD_PASSWORD}
+    if [ "${DATABASE}" = "mysql" ]; then
+        sudo -u www-data php /usr/src/owncloud/occ maintenance:install \
+            --database ${DATABASE} \
+            --database-host ${MYSQL_PORT_3306_TCP_ADDR} \
+            --database-name ${MYSQL_ENV_MYSQL_DATABASE} \
+            --database-user ${MYSQL_ENV_MYSQL_USER} \
+            --database-pass ${MYSQL_ENV_MYSQL_PASSWORD} \
+            --admin-user ${OWNCLOUD_ADMIN_USER} \
+            --admin-pass ${OWNCLOUD_ADMIN_PASSWORD}
 
-    sudo -u www-data php /usr/src/owncloud/occ config:system:set trusted_domains \
-        1 --value ${VIRTUAL_HOST:=localhost}
+    elif [ "${DATABASE}" = "sqlite" ]; then
+        sudo -u www-data php /usr/src/owncloud/occ maintenance:install \
+            --database ${DATABASE} \
+            --admin-user ${OWNCLOUD_ADMIN_USER} \
+            --admin-pass ${OWNCLOUD_ADMIN_PASSWORD}
+    fi
 
-    sudo -u www-data php /usr/src/owncloud/occ config:system:set logtimezone \
-        --value=$(date +%Z)
+    if [ "${DATABASE}" != "manual" ]; then
+        sudo -u www-data php /usr/src/owncloud/occ config:system:set trusted_domains \
+            1 --value ${VIRTUAL_HOST:=localhost}
 
-    sudo -u www-data php /usr/src/owncloud/occ config:system:set memcache.local \
-        --value="\OC\Memcache\APCu"
+        sudo -u www-data php /usr/src/owncloud/occ config:system:set logtimezone \
+            --value=$(date +%Z)
 
-    sudo -u www-data php /usr/src/owncloud/occ config:system:set memcache.locking \
-        --value="\OC\Memcache\Redis"
+        sudo -u www-data php /usr/src/owncloud/occ config:system:set logtimezone \
+            --value=$(date +%Z)
 
-    sudo -u www-data php /usr/src/owncloud/occ config:system:set redis \
-        'host' --value redis
+        sudo -u www-data php /usr/src/owncloud/occ config:system:set memcache.local \
+            --value="\OC\Memcache\APCu"
 
-    sudo -u www-data php /usr/src/owncloud/occ config:system:set redis \
-        'port' --value 6379
+        sudo -u www-data php /usr/src/owncloud/occ config:system:set memcache.locking \
+            --value="\OC\Memcache\Redis"
+
+        sudo -u www-data php /usr/src/owncloud/occ config:system:set redis \
+            'host' --value redis
+
+        sudo -u www-data php /usr/src/owncloud/occ config:system:set redis \
+            'port' --value 6379
+    fi
 fi
 
 exec "$@"
