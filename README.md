@@ -18,60 +18,81 @@ In addition, this image is compatible with [ToyBox](https://github.com/nutsllc/t
 ## Run container
 
 ```bash
-docker run -p 8888:80 -td nutsllc/toybox-owncloud:9.1.0-apache
+docker run -p 8080:80 -td nutsllc/toybox-owncloud:9.1.0-apache
 ```
 
-Then open your web browser and access ``http://<HOST(IP Address)>:8888``
+Then, access it via http://localhost:8080 or http://host-ip:8080 in a browser.
 
-## Docker Compose example( with SQLite )
+## Auto configuration
 
-This is the simplest way to run the ownCloud using SQLite as a database of it.
+By applying ``DATABASE`` environment variable value, it will be set database configuratin and APC cache up automatically.
+
+If you'd like to run the owncloud with sqlite database and configure them automatically, set ``-e DATABASE=sqlite``. 
+
+Example:
+
+```bash
+docker run -p 8080:80 -e DATABASE=sqlite -td nutsllc/toybox-owncloud:9.1.0-apache
+```
+
+If you'd like to run the owncloud with mysql database and configure them automatically, set ``-e DATABASE=mysql`` and ``--link`` option.
+
+Example:
+
+```bash
+docker run -p 8080:80 --link some-mysql:mysql -e DATABASE=mysql -td nutsllc/toybox-owncloud:9.1.0-apache
+```
+
+When you run owncloud instance with auto configuration, you can log it in by toybox/toybox.
+
+## Changing initial account for auto configuration
+
+If you'd like to change username and password of an initial account, set ``-e OWNCLOUD_ADMIN_USER=your-admin-username`` and ``-e OWNCLOUD_ADMIN_PASSWORD=your-admin-password``.
+
+## Docker Compose example( with SQLite auto configuration )
+
+Run docker-compose up, and visit http://localhost:8080 or http://host-ip:8080.
 
 ```bash
 owncloud:
-    image: nutsllc/toybox-owncloud
+    image: nutsllc/toybox-owncloud:latest
+    environment:
+    	- DATABASE=sqlite
+        - OWNCLOUD_ADMIN_USER=admin
+        - OWNCLOUD_ADMIN_PASSWORD=mypass
     volumes:
-        - "./.data/owncloud/config:/var/www/html/config"
-        - "./.data/owncloud/data:/var/www/html/data"
+        - "./data/owncloud/data:/var/www/html/data"
     ports:
         - "8080:80"
 ```
 
-## Docker Compose example( with MySQL )
+## Docker Compose example( with MySQL auto configuration)
 
-Using MySQL as database for the owncloud, set ``DATABASE`` environment to ``mysql`` variable and also set ``OWNCLOUD_USER`` and ``OWNCLOUD_PASSWORD`` for initial admin account.
+Run docker-compose up, wait for it to initialize completely, and visit http://localhost:8080 or http://host-ip:8080.
 
 ```bash
 owncloud:
-    image: nutsllc/toybox-owncloud
+    image: nutsllc/toybox-owncloud:latest
     links:
         - mysql:mysql
     environment:
         - DATABASE=mysql
-        - OWNCLOUD_USER=toybox
-        - OWNCLOUD_PASSWORD=toybox
-        - TOYBOX_UID=1000
-        - TOYBOX_GID=1000
+        - OWNCLOUD_ADMIN_USER=admin
+        - OWNCLOUD_ADMIN_PASSWORD=mypass
     volumes:
-        - "./.data/owncloud/config:/var/www/html/config"
-        - "./.data/owncloud/data:/var/www/html/data"
+        - "./data/owncloud/data:/var/www/html/data"
     ports:
         - "8080:80"
 
 mysql:
     image: nutsllc/toybox-mariadb:10.1.14
     volumes:
-        - ./.data/mariadb:/var/lib/mysql
+        - ./data/mariadb:/var/lib/mysql
     environment:
         MYSQL_ROOT_PASSWORD: root
         MYSQL_DATABASE: owncloud
         MYSQL_USER: owncloud
         MYSQL_PASSWORD: owncloud
-        TOYBOX_UID: 1000
-        TOYBOX_GID: 1000
-        TERM: xterm
-    ports:
-        - 3306
 ```
 
 ## Contributing
